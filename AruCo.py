@@ -34,31 +34,3 @@ if __name__ == '__main__':
     rospy.init_node('trial',anonymous=True)
     rospy.Subscriber("/camera/color/image_raw", Image, detectMarker)
     rospy.spin()
-
-
-"""class ArucoDetect:
-    def __init__(self):
-        self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber("/camera/color/image_raw",Image, self.image_callback)
-        self.aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
-        self.parameters = aruco.DetectorParameters_create()
-    
-    def image_callback(self, data):
-        try:
-            cv_image = self.bridge.imgmsg_to_cv2(data,"bgr8")
-        except CvBridgeError as e:
-            rospy.logerr("CvBridge Error: {}".format(e))
-            return
-
-        gray = cv.cvtColor(cv_image,cv.COLOR_BGR2GRAY)
-        corners, ids, rejected = aruco.detectMarkers(gray,self.aruco_dict,parameters=self.parameters)
-
-        if ids is not None:
-            rospy.loginfo("Detected Markers with IDs: %s", ids.flatten())
-            cv.imshow("Marker",gray)
-            cv.waitKey(5)
-
-if __name__ == '__main__':
-    rospy.init_node('AruCo',anonymous=True)
-    ad = ArucoDetect()
-    rospy.spin()"""
