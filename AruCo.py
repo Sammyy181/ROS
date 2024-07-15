@@ -31,6 +31,6 @@ def detectMarker(data):
         cv.waitKey(5)
 
 if __name__ == '__main__':
-    rospy.init_node('trial',anonymous=True)
+    rospy.init_node('AruCo',anonymous=True)
     rospy.Subscriber("/camera/color/image_raw", Image, detectMarker)
     rospy.spin()
