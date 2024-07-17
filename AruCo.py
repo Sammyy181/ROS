@@ -14,7 +14,7 @@ import math
 dist_coeffs = np.zeros([0.0,0.0,0.0,0.0,0.0])"""
 
 
-class markers:
+class Markers:
 
     def __init__(self):
         self.bridge = CvBridge()
@@ -24,6 +24,7 @@ class markers:
         self.image_sub = rospy.Subscriber("/camera/color/image_raw",Image,self.detectMarker)
         self.detectedIDs = []
         self.poses = []
+        self.waypoints = {}
         
     def findPos(data):
         odomx = data.pose.pose.position.x
@@ -43,7 +44,7 @@ class markers:
         
         corners, ids, rejected = aruco.detectMarkers(gray, self.arucoDict,parameters = self.arucoParams)
 
-        if self.ids is not None:
+        if ids is not None:
             marker_array = MarkerArray()
             
             #cv.imshow("Marker", gray)
@@ -54,7 +55,7 @@ class markers:
                     rospy.loginfo("Detected new Marker with ID: %d", id[0])
                     self.detectedIDs.append(id[0])
                     
-                    self.poseDetect(self,corner[0],id[0])
+                    self.poseDetect(corner[0],id[0])
 
 
         else:
@@ -96,7 +97,7 @@ class markers:
 if __name__ == '__main__':
     rospy.init_node('AruCo',anonymous=True)
 
-    ms = markers()
+    ms = Markers()
 
     rospy.spin()
 
