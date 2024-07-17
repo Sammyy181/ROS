@@ -26,7 +26,7 @@ class Markers:
         self.poses = []
         self.waypoints = {}
         
-    def findPos(data):
+    def findPos(self,data):
         odomx = data.pose.pose.position.x
         odomy = data.pose.pose.position.y
         odomz = data.pose.pose.position.z
