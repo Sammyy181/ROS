@@ -20,15 +20,16 @@ class markers:
         self.bridge = CvBridge()
         self.arucoDict = aruco.Dictionary_get(aruco.DICT_4X4_1000)
         self.arucoParams = aruco.DetectorParameters_create()
-        self.odom_sub = rospy.Subscriber("/odom",Odometry,self.findPos)
-        self.image_sub = rospy.Subscriber("/camera/color/image",Image,self.detectMarker)
+        #self.odom_sub = rospy.Subscriber("/odom",Odometry,self.findPos)
+        self.image_sub = rospy.Subscriber("/camera/color/image_raw",Image,self.detectMarker)
         self.detectedIDs = []
         self.poses = []
         
-    def findPos(self,data):
-        self.x = round(data.pose.pose.position.x,3)
-        self.y = round(data.pose.pose.position.y,3)
-        self.z = round(data.pose.pose.position.z,3)
+    def findPos(data):
+        odomx = data.pose.pose.position.x
+        odomy = data.pose.pose.position.y
+        odomz = data.pose.pose.position.z
+        return odomx,odomy,odomz
 
     def detectMarker(self,data):
         try:
@@ -62,6 +63,7 @@ class markers:
     def poseDetect(self,corners,id):
         
             marker_x = marker_y = 0
+            x,y,z = rospy.Subscriber("/odom",Odometry,self.findPos)
 
             for point in corners:
                 marker_x += point[0]
@@ -70,22 +72,23 @@ class markers:
             marker_x = marker_x/4
             marker_y = marker_y/4
 
-            marker_distance = math.sqrt((marker_x - self.x) ** 2 + (marker_y - self.y) ** 2 + self.z ** 2)
+            marker_distance = math.sqrt((marker_x - x) ** 2 + (marker_y - y) ** 2 + z ** 2)
 
             rospy.loginfo("Pose of AruCo ID %d stored\n",id)
-            rospy.loginfo("Pose: x = %d, y = %d, z = %d",marker_x,marker_y,self.z)
+            rospy.loginfo("Pose: x = %d, y = %d, z = %d\n",marker_x,marker_y,z)
+            rospy.loginfo("Waypoint: x = %d, y = %d, z = %d")
 
             self.waypoints[id] = {
                 'AruCo_ID' : id,
                 'Waypoint' : {
-                    'x' : float(self.x),
-                    'y' : float(self.y),
-                    'z' : float(self.z)
+                    'x' : float(x),
+                    'y' : float(y),
+                    'z' : float(z)
                 },
                 'Pose' : {
                     'x' : float(marker_x),
                     'y' : float(marker_y),
-                    'z' : float(self.z)
+                    'z' : float(z)
                 }
             }
              
