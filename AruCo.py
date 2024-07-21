@@ -9,6 +9,7 @@ from sensor_msgs.msg import Image
 import numpy as np
 from nav_msgs.msg import Odometry
 import math
+import json
 
 """camera_matrix = np.array([[462.138,0,320],[0,462.138,240],[0,0,1]])
 dist_coeffs = np.zeros([0.0,0.0,0.0,0.0,0.0])"""
@@ -26,13 +27,46 @@ class Markers:
         self.poses = []
         self.waypoints = {}
         
-    def findPos(self,data):
+    def findPos(self,data,corners,id,subscriber):
         odomx = data.pose.pose.position.x
         odomy = data.pose.pose.position.y
         odomz = data.pose.pose.position.z
-        return odomx,odomy,odomz
+        
+        marker_x = marker_y = 0
+        
+        for point in corners:
+            marker_x += point[0]
+            marker_y += point[1]
+            
+        marker_x /= 4
+        marker_y /= 4
+        
+        marker_distance = math.sqrt((marker_x - x) ** 2 + (marker_y - y) ** 2 + z ** 2)
+        
+        rospy.loginfo("Pose of AruCo %d stored\n",id)
+        rospy.loginfo("Pose: x = %lf, y = %lf, z = %lf\n",marker_x,marker_y,z)
+        rospy.loginfo("Waypoint: x = %d, y = %d, z = %d", odomx, odomy, odomz)
+        
+        self.waypoints[id] = {
+            'AruCo_ID' : id,
+            'Waypoint' : {
+                'x' : float(odomx),
+                'y' : float(odomy),
+                'z' : float(odomz)
+            },
+            'Pose' : {
+                'x' : float(marker_x),
+                'y' : float(marker_y),
+                'z' : float(z)
+            }
+        }
 
-    def detectMarker(self,data):
+        with open("data.json","w") as outfile:
+            json.dump(waypoints[id],outfile)
+        
+        subscriber.unregister()
+
+    def detectMarker(self,img_data):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data,"bgr8")
 
@@ -55,44 +89,11 @@ class Markers:
                     rospy.loginfo("Detected new Marker with ID: %d", id[0])
                     self.detectedIDs.append(id[0])
                     
-                    self.poseDetect(corner[0],id[0])
+                    subscriber = rospy.Subscriber("/odom", Odometry, lambda data : self.findPos(data,corner[0],id[0],subscriber))
 
 
         else:
-            rospy.loginfo("No Markers Detected")
-
-    def poseDetect(self,corners,id):
-        
-            marker_x = marker_y = 0
-            x,y,z = rospy.Subscriber("/odom",Odometry,self.findPos)
-
-            for point in corners:
-                marker_x += point[0]
-                marker_y += point[1]
-            
-            marker_x = marker_x/4
-            marker_y = marker_y/4
-
-            marker_distance = math.sqrt((marker_x - x) ** 2 + (marker_y - y) ** 2 + z ** 2)
-
-            rospy.loginfo("Pose of AruCo ID %d stored\n",id)
-            rospy.loginfo("Pose: x = %d, y = %d, z = %d\n",marker_x,marker_y,z)
-            rospy.loginfo("Waypoint: x = %d, y = %d, z = %d")
-
-            self.waypoints[id] = {
-                'AruCo_ID' : id,
-                'Waypoint' : {
-                    'x' : float(x),
-                    'y' : float(y),
-                    'z' : float(z)
-                },
-                'Pose' : {
-                    'x' : float(marker_x),
-                    'y' : float(marker_y),
-                    'z' : float(z)
-                }
-            }
-             
+            rospy.loginfo("No Markers Detected")          
 
 if __name__ == '__main__':
     rospy.init_node('AruCo',anonymous=True)
